@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageId>Snail.Toolkit.Authentication.JwtBearer</PackageId>
+        <PackageTags>jwt;jwt-bearer;authentication;aspnetcore;token;hmac;options-validation</PackageTags>
+        <Title>Snail.Toolkit.Authentication.JwtBearer</Title>
+        <Authors>Toolkit</Authors>
+        <Description>JWT Bearer authentication for ASP.NET Core in one call: binds the Jwt configuration section and validates it when the host starts, configures the Bearer scheme from it, and registers ITokenProvider to issue and check HS512 tokens by the same rules. Every check is on by default, a rotated secret is picked up without a restart, refusals are counted by reason, and a second issuer registers under its own key.</Description>
+        <RepositoryUrl>https://github.com/orldev/Snail.Toolkit.Authentication.JwtBearer</RepositoryUrl>
+        <Copyright>Toolkit, 2023-2026</Copyright>
+        <PackageProjectUrl>https://github.com/orldev/Snail.Toolkit.Authentication.JwtBearer</PackageProjectUrl>
+        <RepositoryType>GitHub</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
+    </ItemGroup>
+
+</Project>
