@@ -68,7 +68,7 @@ public class ServiceCollectionExtensionsTests
     public void AddAuthJwtBearer_MissingSection_NamesTheSection()
     {
         var fault = Assert.Throws<OptionsValidationException>(
-            () => Registered(Settings.Of(new())).GetRequiredService<IOptions<AuthOptions>>().Value);
+            () => Registered(Settings.Of([])).GetRequiredService<IOptions<AuthOptions>>().Value);
 
         Assert.Contains($"{AuthOptions.SectionName}:{nameof(AuthOptions.Issuer)}", fault.Message, StringComparison.Ordinal);
     }

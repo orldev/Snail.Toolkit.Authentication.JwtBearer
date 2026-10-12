@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 namespace Snail.Toolkit.Authentication.JwtBearer.Tests;
 
 /// <summary>
