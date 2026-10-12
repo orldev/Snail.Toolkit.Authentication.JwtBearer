@@ -18,6 +18,14 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
+
+    <!--
+      Settings are bound by the configuration binding source generator, not by reflection, so the Jwt section
+      binds in a native app as it does under the JIT.
+    -->
+    <PropertyGroup>
+        <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+    </PropertyGroup>
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
