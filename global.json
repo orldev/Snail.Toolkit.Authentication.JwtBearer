@@ -9,5 +9,10 @@
     "version": "10.0.302",
     "rollForward": "latestPatch",
     "allowPrerelease": false
+  },
+
+  "msbuild-sdks": {
+    "Snail.Sdk": "0.1.0-local.15",
+    "Snail.Sdk.Library": "0.1.0-local.15"
   }
 }

@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="benchmarks/Snail.Toolkit.Authentication.JwtBearer.Benchmarks.csproj" />
   <Project Path="src/Snail.Toolkit.Authentication.JwtBearer.csproj" />
+  <Project Path="tests/Snail.Toolkit.Authentication.JwtBearer.NativeProbe/Snail.Toolkit.Authentication.JwtBearer.NativeProbe.csproj" />
   <Project Path="tests/Snail.Toolkit.Authentication.JwtBearer.Tests.csproj" />
 </Solution>

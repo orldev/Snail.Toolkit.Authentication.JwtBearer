@@ -1,10 +1,9 @@
 <Project>
 
-  <!-- Migration debt: rules of the shared .editorconfig this repository does not meet yet (IDE1006: 1 member, the obsolete
-       public ITokenProvider.Validate without the Async suffix), removed when it moves onto Snail.Sdk
-       (Toolkit/Snail.Sdk/docs/standard.md). -->
+  <!-- The build — language, nullable, docs, analyzers, warnings as errors — is Snail.Sdk's (global.json). -->
   <PropertyGroup>
-    <NoWarn>$(NoWarn);IDE1006</NoWarn>
+    <!-- The last release on NuGet: a pack fails on any change that would break a user of it. Raised with each release. -->
+    <SnailPackageBaseline>1.1.0</SnailPackageBaseline>
   </PropertyGroup>
 
 </Project>

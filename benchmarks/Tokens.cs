@@ -10,7 +10,7 @@ namespace Snail.Toolkit.Authentication.JwtBearer.Benchmarks;
 /// </summary>
 /// <remarks>
 /// Judging runs the rules the bearer middleware runs on each request, signing key resolver included, so
-/// <see cref="Validate"/> stands for the per-request cost. <see cref="ValidateForged"/> reaches the same resolver
+/// <see cref="IsValid"/> stands for the per-request cost. <see cref="IsForgeryAccepted"/> reaches the same resolver
 /// and is refused on the signature, the path an attacker drives. Read the Allocated column: the times of a few
 /// microseconds move with the machine, the bytes do not.
 /// </remarks>
@@ -26,7 +26,7 @@ public class Tokens
     private string _token = string.Empty;
     private string _forged = string.Empty;
 
-    /// <summary>Registers the default issuer from configuration and mints the tokens the judging benchmarks read.</summary>
+    /// <summary>Registers the default issuer from configuration and mints the tokens the judging ones read.</summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -59,9 +59,10 @@ public class Tokens
 
     /// <summary>Judges a valid token.</summary>
     [Benchmark]
-    public async Task<bool> Validate() => (await _provider.ValidateAsync(_token).ConfigureAwait(false)).IsValid;
+    public async Task<bool> IsValid() => (await _provider.ValidateAsync(_token).ConfigureAwait(false)).IsValid;
 
     /// <summary>Judges a token whose signature was forged.</summary>
     [Benchmark]
-    public async Task<bool> ValidateForged() => (await _provider.ValidateAsync(_forged).ConfigureAwait(false)).IsValid;
+    public async Task<bool> IsForgeryAccepted() =>
+        (await _provider.ValidateAsync(_forged).ConfigureAwait(false)).IsValid;
 }

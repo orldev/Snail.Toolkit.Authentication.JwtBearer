@@ -1,0 +1,84 @@
+#nullable enable
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.Audience.get -> string!
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.Audience.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.AuthOptions() -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ClockSkew.get -> System.TimeSpan
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ClockSkew.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.IncludeErrorDetails.get -> bool
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.IncludeErrorDetails.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.Issuer.get -> string!
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.Issuer.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.RequireHttpsMetadata.get -> bool
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.RequireHttpsMetadata.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.SecretKey.get -> string!
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.SecretKey.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.TokenLifetime.get -> int
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.TokenLifetime.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateAudience.get -> bool
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateAudience.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateIssuer.get -> bool
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateIssuer.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateIssuerSigningKey.get -> bool
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateIssuerSigningKey.set -> void
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateLifetime.get -> bool
+Snail.Toolkit.Authentication.JwtBearer.AuthOptions.ValidateLifetime.set -> void
+Snail.Toolkit.Authentication.JwtBearer.IRefreshTokens
+Snail.Toolkit.Authentication.JwtBearer.IRefreshTokens.Mint(int size = 32) -> string!
+Snail.Toolkit.Authentication.JwtBearer.ITokenProvider
+Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Create(System.Collections.Generic.IEnumerable<System.Security.Claims.Claim!>? claims = null) -> string!
+Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Refresh(int size = 32) -> string!
+Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Validate(string! token) -> System.Threading.Tasks.Task<bool>!
+Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.ValidateAsync(string! token, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Snail.Toolkit.Authentication.JwtBearer.TokenValidation!>!
+Snail.Toolkit.Authentication.JwtBearer.RefreshTokens
+Snail.Toolkit.Authentication.JwtBearer.RefreshTokens.Mint(int size = 32) -> string!
+Snail.Toolkit.Authentication.JwtBearer.RefreshTokens.RefreshTokens() -> void
+Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions
+Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions.extension(Microsoft.Extensions.DependencyInjection.IServiceCollection!)
+Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions.extension(Microsoft.Extensions.DependencyInjection.IServiceCollection!).AddAuthJwtBearer(Microsoft.Extensions.Configuration.IConfiguration! configuration, System.Action<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions!>? configure = null, string! sectionName = "Jwt") -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions.extension(Microsoft.Extensions.DependencyInjection.IServiceCollection!).AddKeyedAuthJwtBearer(Microsoft.Extensions.Configuration.IConfiguration! configuration, string! serviceKey, System.Action<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions!>? configure = null, string? sectionName = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions.extension(Microsoft.Extensions.DependencyInjection.IServiceCollection!).AddTokenProvider() -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Snail.Toolkit.Authentication.JwtBearer.TokenMetrics
+Snail.Toolkit.Authentication.JwtBearer.TokenMetrics.Dispose() -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenMetrics.Issued(string! scheme) -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenMetrics.Refused(string! scheme, Snail.Toolkit.Authentication.JwtBearer.TokenRefusal refusal) -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenMetrics.TokenMetrics(System.Diagnostics.Metrics.IMeterFactory? factory = null) -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenProvider
+Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Create(System.Collections.Generic.IEnumerable<System.Security.Claims.Claim!>? claims = null) -> string!
+Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Dispose() -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Refresh(int size = 32) -> string!
+Snail.Toolkit.Authentication.JwtBearer.TokenProvider.TokenProvider(string! scheme, string! optionsName, Microsoft.Extensions.Options.IOptionsMonitor<Snail.Toolkit.Authentication.JwtBearer.AuthOptions!>! settings, Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions!>! bearer, System.TimeProvider! time, Snail.Toolkit.Authentication.JwtBearer.TokenMetrics! metrics, Microsoft.Extensions.Logging.ILogger<Snail.Toolkit.Authentication.JwtBearer.TokenProvider!>? logger = null) -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenProvider.ValidateAsync(string! token, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Snail.Toolkit.Authentication.JwtBearer.TokenValidation!>!
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.Audience = 4 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.Expired = 1 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.Issuer = 5 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.Malformed = 6 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.None = 0 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.NotYetValid = 2 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.Other = 7 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenRefusal.Signature = 3 -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.<Clone>$() -> Snail.Toolkit.Authentication.JwtBearer.TokenValidation!
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Deconstruct(out Snail.Toolkit.Authentication.JwtBearer.TokenRefusal Refusal, out string? Fault) -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Equals(Snail.Toolkit.Authentication.JwtBearer.TokenValidation? other) -> bool
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Fault.get -> string?
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Fault.init -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.IsValid.get -> bool
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Refusal.get -> Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Refusal.init -> void
+Snail.Toolkit.Authentication.JwtBearer.TokenValidation.TokenValidation(Snail.Toolkit.Authentication.JwtBearer.TokenRefusal Refusal, string? Fault) -> void
+const Snail.Toolkit.Authentication.JwtBearer.AuthOptions.MinimumSecretLength = 64 -> int
+const Snail.Toolkit.Authentication.JwtBearer.AuthOptions.SectionName = "Jwt" -> string!
+const Snail.Toolkit.Authentication.JwtBearer.RefreshTokens.MinimumSize = 16 -> int
+const Snail.Toolkit.Authentication.JwtBearer.TokenMetrics.MeterName = "Snail.Toolkit.Authentication.JwtBearer" -> string!
+override Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Equals(object? obj) -> bool
+override Snail.Toolkit.Authentication.JwtBearer.TokenValidation.GetHashCode() -> int
+override Snail.Toolkit.Authentication.JwtBearer.TokenValidation.ToString() -> string!
+static Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions.AddAuthJwtBearer(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Microsoft.Extensions.Configuration.IConfiguration! configuration, System.Action<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions!>? configure = null, string! sectionName = "Jwt") -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions.AddKeyedAuthJwtBearer(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Microsoft.Extensions.Configuration.IConfiguration! configuration, string! serviceKey, System.Action<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions!>? configure = null, string? sectionName = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Snail.Toolkit.Authentication.JwtBearer.ServiceCollectionExtensions.AddTokenProvider(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Refused(Snail.Toolkit.Authentication.JwtBearer.TokenRefusal refusal, string! fault) -> Snail.Toolkit.Authentication.JwtBearer.TokenValidation!
+static Snail.Toolkit.Authentication.JwtBearer.TokenValidation.Valid.get -> Snail.Toolkit.Authentication.JwtBearer.TokenValidation!
+static Snail.Toolkit.Authentication.JwtBearer.TokenValidation.operator !=(Snail.Toolkit.Authentication.JwtBearer.TokenValidation? left, Snail.Toolkit.Authentication.JwtBearer.TokenValidation? right) -> bool
+static Snail.Toolkit.Authentication.JwtBearer.TokenValidation.operator ==(Snail.Toolkit.Authentication.JwtBearer.TokenValidation? left, Snail.Toolkit.Authentication.JwtBearer.TokenValidation? right) -> bool

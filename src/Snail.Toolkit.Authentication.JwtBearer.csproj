@@ -1,10 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Snail.Sdk.Library">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageId>Snail.Toolkit.Authentication.JwtBearer</PackageId>
         <PackageTags>jwt;jwt-bearer;authentication;aspnetcore;token;hmac;options-validation</PackageTags>
         <Title>Snail.Toolkit.Authentication.JwtBearer</Title>
@@ -13,8 +10,6 @@
         <RepositoryUrl>https://github.com/orldev/Snail.Toolkit.Authentication.JwtBearer</RepositoryUrl>
         <Copyright>Toolkit, 2023-2026</Copyright>
         <PackageProjectUrl>https://github.com/orldev/Snail.Toolkit.Authentication.JwtBearer</PackageProjectUrl>
-        <RepositoryType>GitHub</RepositoryType>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>

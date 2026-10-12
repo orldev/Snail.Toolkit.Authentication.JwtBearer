@@ -92,7 +92,7 @@ public static class ServiceCollectionExtensions
         Action<JwtBearerOptions>? configure,
         bool isDefaultScheme)
     {
-        if (!services.Claim(serviceKey, scheme, sectionName))
+        if (!services.TryClaim(serviceKey, scheme, sectionName))
             return services;
 
         var optionsName = serviceKey ?? Options.DefaultName;
@@ -169,7 +169,8 @@ public static class ServiceCollectionExtensions
             container.GetRequiredService<TokenMetrics>(),
             container.GetService<ILogger<TokenProvider>>());
 
-    private static bool Claim(this IServiceCollection services, string? serviceKey, string scheme, string sectionName)
+    private static bool TryClaim(
+        this IServiceCollection services, string? serviceKey, string scheme, string sectionName)
     {
         var claimed = services
             .Where(descriptor => descriptor.ServiceType == typeof(Issuer))
