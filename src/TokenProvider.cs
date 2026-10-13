@@ -23,6 +23,24 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
 
     private static readonly RefreshTokens Secrets = new();
 
+    /// <summary>
+    /// The token descriptor this thread filled last, reused for its next token.
+    /// </summary>
+    /// <remarks>
+    /// A descriptor and the audience list the handler creates on it were allocated for every token only to be
+    /// read once. Every value a token is made from is written afresh each time; the descriptor is taken off the
+    /// thread while a token is made, so a token minted from inside another gets one of its own, and the claims
+    /// are let go once the token is signed.
+    /// </remarks>
+    [ThreadStatic]
+    private static SecurityTokenDescriptor? _spare;
+
+    /// <summary>
+    /// The identity this thread lent its last claims through, reused for its next token.
+    /// </summary>
+    [ThreadStatic]
+    private static LentClaims? _lent;
+
     private readonly string _scheme;
     private readonly string _optionsName;
     private readonly IOptionsMonitor<AuthOptions> _settings;
@@ -75,21 +93,36 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
     {
         var settings = _settings.Get(_optionsName);
         var issuedAt = _time.GetUtcNow().UtcDateTime;
+        var expires = issuedAt.AddMinutes(settings.TokenLifetime);
+        var subject = claims is null ? null : Lend(claims);
 
-        var descriptor = new SecurityTokenDescriptor
-        {
-            Issuer = settings.Issuer,
-            Audience = settings.Audience,
-            IssuedAt = issuedAt,
-            NotBefore = issuedAt,
-            Expires = issuedAt.AddMinutes(settings.TokenLifetime),
-            Subject = claims is null ? null : new ClaimsIdentity(claims),
-            SigningCredentials = _credentials
-        };
+        var descriptor = _spare ?? new SecurityTokenDescriptor();
+        _spare = null;
+        descriptor.Issuer = settings.Issuer;
+        descriptor.Audience = settings.Audience;
+        descriptor.IssuedAt = issuedAt;
+        descriptor.NotBefore = issuedAt;
+        descriptor.Expires = expires;
+        descriptor.Subject = subject;
+        descriptor.SigningCredentials = _credentials;
 
         _metrics.Issued(_scheme);
 
-        return Handler.CreateToken(descriptor);
+        try
+        {
+            return Handler.CreateToken(descriptor);
+        }
+        finally
+        {
+            descriptor.Subject = null;
+            _spare = descriptor;
+
+            if (subject is not null)
+            {
+                subject.Release();
+                _lent = subject;
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -122,6 +155,14 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "A token of scheme {Scheme} was refused: {Refusal}.")]
     private static partial void Refused(ILogger logger, string scheme, TokenRefusal refusal);
+
+    private static LentClaims Lend(IEnumerable<Claim> claims)
+    {
+        var lent = _lent ?? new LentClaims();
+        _lent = null;
+
+        return lent.Holding(claims);
+    }
 
     private static TokenRefusal RefusalOf(Exception? fault) => fault switch
     {

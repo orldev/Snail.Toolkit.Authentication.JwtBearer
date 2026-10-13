@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 
 namespace Snail.Toolkit.Authentication.JwtBearer.Tests;
@@ -7,7 +8,7 @@ public class TokenMetricsTests
     [Fact]
     public async Task Provider_IssuingAndRefusing_IsCounted()
     {
-        List<(string Instrument, string? Refusal)> recorded = [];
+        ConcurrentQueue<(string Instrument, string? Refusal)> recorded = [];
 
         using var listener = Listening(recorded);
 
@@ -23,7 +24,7 @@ public class TokenMetricsTests
         Assert.Contains(("auth.tokens.refused", nameof(TokenRefusal.Malformed)), recorded);
     }
 
-    private static MeterListener Listening(List<(string, string?)> recorded)
+    private static MeterListener Listening(ConcurrentQueue<(string, string?)> recorded)
     {
         var listener = new MeterListener
         {
@@ -44,7 +45,7 @@ public class TokenMetricsTests
                     refusal = tag.Value?.ToString();
             }
 
-            recorded.Add((instrument.Name, refusal));
+            recorded.Enqueue((instrument.Name, refusal));
         });
 
         listener.Start();
