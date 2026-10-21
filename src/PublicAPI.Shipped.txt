@@ -27,8 +27,6 @@ Snail.Toolkit.Authentication.JwtBearer.IRefreshTokens
 Snail.Toolkit.Authentication.JwtBearer.IRefreshTokens.Mint(int size = 32) -> string!
 Snail.Toolkit.Authentication.JwtBearer.ITokenProvider
 Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Create(System.Collections.Generic.IEnumerable<System.Security.Claims.Claim!>? claims = null) -> string!
-Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Refresh(int size = 32) -> string!
-Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Validate(string! token) -> System.Threading.Tasks.Task<bool>!
 Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.ValidateAsync(string! token, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Snail.Toolkit.Authentication.JwtBearer.TokenValidation!>!
 Snail.Toolkit.Authentication.JwtBearer.RefreshTokens
 Snail.Toolkit.Authentication.JwtBearer.RefreshTokens.Mint(int size = 32) -> string!
@@ -45,8 +43,6 @@ Snail.Toolkit.Authentication.JwtBearer.TokenMetrics.Refused(string! scheme, Snai
 Snail.Toolkit.Authentication.JwtBearer.TokenMetrics.TokenMetrics(System.Diagnostics.Metrics.IMeterFactory? factory = null) -> void
 Snail.Toolkit.Authentication.JwtBearer.TokenProvider
 Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Create(System.Collections.Generic.IEnumerable<System.Security.Claims.Claim!>? claims = null) -> string!
-Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Dispose() -> void
-Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Refresh(int size = 32) -> string!
 Snail.Toolkit.Authentication.JwtBearer.TokenProvider.TokenProvider(string! scheme, string! optionsName, Microsoft.Extensions.Options.IOptionsMonitor<Snail.Toolkit.Authentication.JwtBearer.AuthOptions!>! settings, Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions!>! bearer, System.TimeProvider! time, Snail.Toolkit.Authentication.JwtBearer.TokenMetrics! metrics, Microsoft.Extensions.Logging.ILogger<Snail.Toolkit.Authentication.JwtBearer.TokenProvider!>? logger = null) -> void
 Snail.Toolkit.Authentication.JwtBearer.TokenProvider.ValidateAsync(string! token, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Snail.Toolkit.Authentication.JwtBearer.TokenValidation!>!
 Snail.Toolkit.Authentication.JwtBearer.TokenRefusal
