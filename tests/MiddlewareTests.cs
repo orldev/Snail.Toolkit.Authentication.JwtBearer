@@ -57,6 +57,29 @@ public class MiddlewareTests
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    /// <summary>
+    /// The middleware reads the scheme's options per request, and those are built again when the section reloads:
+    /// a token of the old secret is refused and one of the new secret accepted, with no restart.
+    /// </summary>
+    [Fact]
+    public async Task Request_AfterTheSecretRotated_IsJudgedByTheNewSecret()
+    {
+        const string rotated = "Q3mZ8vYp2LkR7tWn5XcB1HdJ6FgS9AeU4oIy0PqVr8TuMw3NzKb2CxLj5GhD7fEs";
+        var configuration = (IConfigurationRoot)Settings.Complete();
+        using var host = await Started(configuration: configuration);
+        var tokens = host.Services.GetRequiredService<ITokenProvider>();
+        var before = tokens.Create();
+
+        configuration[$"{AuthOptions.SectionName}:{nameof(AuthOptions.SecretKey)}"] = rotated;
+        configuration.Reload();
+
+        var old = await Ask(host, before);
+        var fresh = await Ask(host, tokens.Create());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, old.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, fresh.StatusCode);
+    }
+
     [Fact]
     public async Task Host_WithoutASecret_RefusesToStartNamingTheKey()
     {

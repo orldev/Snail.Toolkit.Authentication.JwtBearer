@@ -13,16 +13,15 @@ namespace Snail.Toolkit.Authentication.JwtBearer;
 /// <remarks>
 /// Judging goes by the rules of its own bearer scheme rather than by a second set built here, so
 /// whatever a caller changed on the scheme's options holds for a token checked by hand as well. Minting
-/// takes the issuer and audience from those same rules, so a token is always made for the validator that
-/// will judge it: the settings used to be read live for minting and once for judging, and a renamed issuer
-/// made the process refuse every token it minted. Only the secret follows the configuration, on both sides,
-/// by the same rule — the signing credentials are made again when it changes and kept while it does not.
+/// takes the issuer, the audience and the signing key from those same rules, so a token is always made
+/// for the validator that will judge it, with the key it will be judged by. The scheme's options are
+/// built again when their section reloads, so both sides follow the configuration together; the settings
+/// used to be read live for minting and once for judging, and a renamed issuer made the process refuse
+/// every token it minted.
 /// </remarks>
-public sealed partial class TokenProvider : ITokenProvider, IDisposable
+public sealed partial class TokenProvider : ITokenProvider
 {
     private static readonly JsonWebTokenHandler Handler = new();
-
-    private static readonly RefreshTokens Secrets = new();
 
     /// <summary>
     /// The token descriptor this thread filled last, reused for its next token.
@@ -49,7 +48,8 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
     private readonly TimeProvider _time;
     private readonly TokenMetrics _metrics;
     private readonly ILogger<TokenProvider>? _logger;
-    private readonly OfSecret<SigningCredentials> _credentials = new(CredentialsOf);
+
+    private SigningCredentials? _credentials;
 
     /// <summary>
     /// Reads one named configuration and follows it as it changes.
@@ -87,8 +87,8 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
     /// <inheritdoc />
     public string Create(IEnumerable<Claim>? claims = null)
     {
-        var settings = _settings.Get(_optionsName);
         var rules = _bearer.Get(_scheme).TokenValidationParameters;
+        var settings = _settings.Get(_optionsName);
         var issuedAt = _time.GetUtcNow().UtcDateTime;
         var subject = claims is null ? null : Lend(claims);
 
@@ -99,7 +99,7 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
         descriptor.NotBefore = issuedAt;
         descriptor.Expires = issuedAt.AddMinutes(settings.TokenLifetime);
         descriptor.Subject = subject;
-        descriptor.SigningCredentials = _credentials.For(settings.SecretKey);
+        descriptor.SigningCredentials = CredentialsOf(rules);
 
         try
         {
@@ -113,10 +113,6 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
             Return(descriptor, subject);
         }
     }
-
-    /// <inheritdoc />
-    [Obsolete("Use IRefreshTokens.Mint: a refresh token is not a JWT and none of these settings apply.")]
-    public string Refresh(int size = 32) => Secrets.Mint(size);
 
     /// <inheritdoc />
     public async Task<TokenValidation> ValidateAsync(string token, CancellationToken cancellationToken = default)
@@ -137,17 +133,6 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
 
         return TokenValidation.Refused(
             refusal, verdict.Exception?.Message ?? "The token did not pass validation.");
-    }
-
-    /// <summary>
-    /// Nothing to release: the signing credentials follow the secret by comparison, not by subscription.
-    /// </summary>
-    /// <remarks>
-    /// Kept because it shipped. It used to end the subscription to the settings through which a rotated secret
-    /// reached the credentials.
-    /// </remarks>
-    public void Dispose()
-    {
     }
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "A token of scheme {Scheme} was refused: {Refusal}.")]
@@ -193,6 +178,26 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
         _ => TokenRefusal.Other
     };
 
-    private static SigningCredentials CredentialsOf(string secret) =>
-        new(ValidationRules.Key(secret), SecurityAlgorithms.HmacSha512);
+    /// <summary>
+    /// The credentials of the key the rules hold, kept while the rules keep the same key.
+    /// </summary>
+    /// <remarks>
+    /// Compared by reference: the options are built again on a reload, with a key of their own, so a new key means
+    /// a new secret and the same key means the same one. A caller whose <c>configure</c> replaced the key with a
+    /// list has taken the keys into its own hands, and there is nothing here to sign with.
+    /// </remarks>
+    private SigningCredentials CredentialsOf(TokenValidationParameters rules)
+    {
+        var key = rules.IssuerSigningKey ?? throw new InvalidOperationException(
+            $"The rules of scheme '{_scheme}' hold no IssuerSigningKey; the provider signs with the key the scheme is judged by.");
+        var kept = _credentials;
+
+        if (kept is not null && ReferenceEquals(kept.Key, key))
+            return kept;
+
+        var fresh = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+        _credentials = fresh;
+
+        return fresh;
+    }
 }

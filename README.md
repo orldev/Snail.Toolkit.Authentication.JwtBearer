@@ -4,7 +4,7 @@ JWT Bearer authentication for ASP.NET Core in one call. The `Jwt` section is bou
 the host starts, the Bearer scheme is configured from it, and `ITokenProvider` issues and checks tokens
 signed with HMAC-SHA512 by the very same rules.
 
-Every check is on by default, the caller's own options win over the package's, a rotated secret is
+Every check is on by default, the caller's own options win over the package's, a changed section is
 picked up without a restart, and a second issuer registers under its own key. .NET 10, Microsoft
 dependencies only.
 
@@ -62,9 +62,10 @@ app.UseAuthorization();   // Required for [Authorize] attributes
 
 Every check defaults to **on**. Turning one off is an explicit decision, written in configuration.
 
-Only `SecretKey` follows a reload of the configuration. The issuer, the audience, the flags and the
-skew are read once, when the scheme's options are built, and a token is always minted for those same
-rules; changing them takes a restart.
+The whole section follows a reload of the configuration: the scheme's options are built again from it,
+the middleware and `ITokenProvider` judge by the new rules on the next token, and a token is minted for
+the rules, with the key, it will be judged by. A section that reloads into something invalid stops both
+minting and judging with the fault naming the key, rather than keeping the last good secret.
 
 The section name is a parameter, so the settings can live wherever the application keeps them:
 
@@ -101,7 +102,8 @@ process up, naming the key it choked on, instead of failing on the first login.
 
 ### Custom JWT Bearer Options
 
-The delegate runs **after** this package has applied its own settings, so anything it sets wins.
+The delegate runs **after** this package has applied its own settings, so anything it sets wins. It
+runs again each time the section reloads.
 
 ```csharp
 builder.Services.AddAuthJwtBearer(builder.Configuration, options =>
@@ -112,6 +114,10 @@ builder.Services.AddAuthJwtBearer(builder.Configuration, options =>
     };
 });
 ```
+
+`ITokenProvider` signs with `TokenValidationParameters.IssuerSigningKey`, the key the scheme is judged
+by. A delegate that replaces it with `IssuerSigningKeys` has taken the keys into its own hands, and
+`Create` refuses to guess which one to sign with.
 
 ### Issuing tokens without the request pipeline
 
@@ -124,7 +130,8 @@ builder.Services.AddTokenProvider();
 ## Security Considerations
 
 1. Always use HTTPS in production
-2. Rotate `SecretKey` periodically — a reloadable configuration source is picked up without a restart
+2. Rotate `SecretKey` periodically — a reloadable configuration source is picked up without a restart,
+   and tokens of the previous secret are refused from that moment
 3. Set an appropriate `TokenLifetime`
 4. Store `SecretKey` securely (HashiCorp Vault, Azure Key Vault, AWS Secrets Manager)
 5. Leave `IncludeErrorDetails` off outside development: it tells a caller whether a token expired or
@@ -217,6 +224,22 @@ registered: the counter answers whether tokens are expiring or arriving unsigned
 which token it was.
 
 ## Upgrading
+
+### 2.0
+
+- `ITokenProvider.Validate` and `ITokenProvider.Refresh`, obsolete since 1.1, are gone: `ValidateAsync`
+  carries the reason, `IRefreshTokens.Mint` mints refresh tokens. `TokenProvider` no longer implements
+  `IDisposable`.
+- The whole `Jwt` section follows a reload, not only `SecretKey`: a changed issuer, audience, flag or
+  skew applies to the next token. A section that reloads into something invalid stops minting and
+  judging with the options fault instead of keeping the last good secret.
+- `ITokenProvider.Create` signs with the scheme's `IssuerSigningKey`. A `configure` delegate that
+  replaces it with `IssuerSigningKeys` makes `Create` throw.
+- `TokenLifetime` above a century (52 596 000 minutes) is refused at startup, as zero and negative
+  values were.
+- `AddTokenProvider()` validates the settings at startup as `AddAuthJwtBearer` does.
+
+### 1.1
 
 - Every validation flag now defaults to `true`. An application that relied on one being off has to
   say so in configuration.

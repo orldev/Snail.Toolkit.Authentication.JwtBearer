@@ -40,9 +40,7 @@ Mints the tokens an application hands out and judges the ones it gets back.
 | Member | Summary |
 | --- | --- |
 | `Task<TokenValidation> ValidateAsync(string token, CancellationToken cancellationToken = default)` | Judges a token and says why it was refused. |
-| `Task<bool> Validate(string token)` | Whether a token passes every configured check. |
 | `string Create(IEnumerable<Claim>? claims = null)` | Mints a signed token carrying the given claims. |
-| `string Refresh(int size = 32)` | Mints a refresh token of `size` random bytes. |
 
 ### class RefreshTokens
 
@@ -83,8 +81,6 @@ Mints and judges tokens according to one named `AuthOptions`.
 | `Task<TokenValidation> ValidateAsync(string token, CancellationToken cancellationToken = default)` | Judges a token and says why it was refused. |
 | `TokenProvider(string scheme, string optionsName, IOptionsMonitor<AuthOptions> settings, IOptionsMonitor<JwtBearerOptions> bearer, TimeProvider time, TokenMetrics metrics, ILogger<TokenProvider>? logger = null)` | Reads one named configuration and follows it as it changes. |
 | `string Create(IEnumerable<Claim>? claims = null)` | Mints a signed token carrying the given claims. |
-| `string Refresh(int size = 32)` | Mints a refresh token of `size` random bytes. |
-| `void Dispose()` | Nothing to release: the signing credentials follow the secret by comparison, not by subscription. |
 
 ### enum TokenRefusal
 

@@ -30,6 +30,73 @@ public class RotationChaosTests
     }
 
     /// <summary>
+    /// The whole section follows a reload: after the issuer is renamed, a token of the old issuer is refused as
+    /// such and a token minted afterwards passes.
+    /// </summary>
+    [Fact]
+    public async Task ValidateAsync_IssuerChangedInConfiguration_JudgesByTheNewIssuer()
+    {
+        var configuration = (IConfigurationRoot)Settings.Complete();
+        var tokens = Provider(configuration);
+        var before = tokens.Create();
+
+        configuration[$"{AuthOptions.SectionName}:{nameof(AuthOptions.Issuer)}"] = "issuer.renamed";
+        configuration.Reload();
+
+        var old = await tokens.ValidateAsync(before);
+        var fresh = await tokens.ValidateAsync(tokens.Create());
+
+        Assert.Equal(TokenRefusal.Issuer, old.Refusal);
+        Assert.True(fresh.IsValid, fresh.Fault);
+    }
+
+    /// <summary>
+    /// A flag follows too: the lifetime check turned off in configuration lets an expired token through on the next
+    /// judgement, with no restart.
+    /// </summary>
+    [Fact]
+    public async Task ValidateAsync_LifetimeCheckTurnedOffInConfiguration_AcceptsAnExpiredToken()
+    {
+        var configuration = (IConfigurationRoot)Settings.Complete();
+        var tokens = new ServiceCollection()
+            .AddSingleton<TimeProvider>(new FrozenTime(DateTimeOffset.UtcNow.AddHours(-2)))
+            .AddAuthJwtBearer(configuration)
+            .BuildServiceProvider()
+            .GetRequiredService<ITokenProvider>();
+        var expired = tokens.Create();
+        var strict = await tokens.ValidateAsync(expired);
+
+        configuration[$"{AuthOptions.SectionName}:{nameof(AuthOptions.ValidateLifetime)}"] = "false";
+        configuration.Reload();
+
+        var lenient = await tokens.ValidateAsync(expired);
+
+        Assert.Equal(TokenRefusal.Expired, strict.Refusal);
+        Assert.True(lenient.IsValid, lenient.Fault);
+    }
+
+    /// <summary>
+    /// Pins: a caller whose delegate replaced the key with a list of keys has taken the keys into its own hands, and
+    /// Create says what it is missing instead of signing with a key the judge may not hold.
+    /// </summary>
+    [Fact]
+    public void Create_CallerReplacedTheKeyWithAList_SaysWhatToSignWith()
+    {
+        var tokens = new ServiceCollection()
+            .AddAuthJwtBearer(Settings.Complete(), bearer =>
+            {
+                bearer.TokenValidationParameters.IssuerSigningKeys = [bearer.TokenValidationParameters.IssuerSigningKey];
+                bearer.TokenValidationParameters.IssuerSigningKey = null;
+            })
+            .BuildServiceProvider()
+            .GetRequiredService<ITokenProvider>();
+
+        var fault = Assert.Throws<InvalidOperationException>(() => tokens.Create());
+
+        Assert.Contains("IssuerSigningKey", fault.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Breaks: the secret is rotated fifty times while thirty-two threads keep judging tokens of both secrets.
     /// The key pair is swapped as one, so a verdict is Valid or Signature and never a crash or Other.
     /// </summary>
@@ -68,10 +135,10 @@ public class RotationChaosTests
     }
 
     /// <summary>
-    /// Pins: the secret is rotated to one HMAC-SHA512 cannot use. The options validator refuses it on reload, the
-    /// cached settings are gone, and from then on issuing fails naming the key while judging refuses everything —
-    /// the process fails closed rather than keeping the last good secret. The reload itself surfaces the fault to
-    /// whoever triggered it; a file watcher swallows it.
+    /// Pins: the secret is rotated to one HMAC-SHA512 cannot use. The options validator refuses it when the scheme's
+    /// options are built again, so from then on both minting and judging throw naming the key — the process fails
+    /// closed rather than keeping the last good secret. The reload itself surfaces the fault to whoever triggered
+    /// it; a file watcher swallows it.
     /// </summary>
     [Fact]
     public async Task Create_SecretRotatedToAShortOne_FailsClosedNamingTheKey()
@@ -83,13 +150,13 @@ public class RotationChaosTests
 
         var reload = Record.Exception(() => Rotate(configuration, new string('k', 32)));
         var mint = Record.Exception(() => tokens.Create());
-        var verdict = await tokens.ValidateAsync(good);
+        var judge = await Record.ExceptionAsync(() => tokens.ValidateAsync(good));
 
         Assert.True(warm.IsValid);
         Assert.NotNull(reload);
         var fault = Assert.IsType<OptionsValidationException>(mint);
         Assert.Contains($"{AuthOptions.SectionName}:{nameof(AuthOptions.SecretKey)}", fault.Message, StringComparison.Ordinal);
-        Assert.Equal(TokenRefusal.Other, verdict.Refusal);
+        Assert.IsType<OptionsValidationException>(judge);
     }
 
     private static void Rotate(IConfigurationRoot configuration, string secret)

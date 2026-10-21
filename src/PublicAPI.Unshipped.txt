@@ -1,1 +1,5 @@
 #nullable enable
+*REMOVED*Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Refresh(int size = 32) -> string!
+*REMOVED*Snail.Toolkit.Authentication.JwtBearer.ITokenProvider.Validate(string! token) -> System.Threading.Tasks.Task<bool>!
+*REMOVED*Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Dispose() -> void
+*REMOVED*Snail.Toolkit.Authentication.JwtBearer.TokenProvider.Refresh(int size = 32) -> string!

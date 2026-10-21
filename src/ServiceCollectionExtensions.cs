@@ -109,7 +109,7 @@ public static class ServiceCollectionExtensions
 
         var optionsName = serviceKey ?? Options.DefaultName;
 
-        services.AddAuthSettings(configuration, optionsName, sectionName);
+        services.AddAuthSettings(configuration, optionsName, scheme, sectionName);
         services.AddBearerRules(optionsName, scheme, configure);
         services.AddScheme(scheme, isDefaultScheme);
 
@@ -117,9 +117,17 @@ public static class ServiceCollectionExtensions
     }
 
     private static IServiceCollection AddAuthSettings(
-        this IServiceCollection services, IConfiguration configuration, string optionsName, string sectionName)
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string optionsName,
+        string scheme,
+        string sectionName)
     {
-        services.AddOptions<AuthOptions>(optionsName).Bind(configuration.GetSection(sectionName));
+        var section = configuration.GetSection(sectionName);
+
+        services.AddOptions<AuthOptions>(optionsName).Bind(section);
+        services.AddSingleton<IOptionsChangeTokenSource<JwtBearerOptions>>(
+            new ConfigurationChangeTokenSource<JwtBearerOptions>(scheme, section));
 
         return services.AddJudgement(optionsName, sectionName);
     }
@@ -143,12 +151,14 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services, string optionsName, string scheme, Action<JwtBearerOptions>? configure)
     {
         services.AddOptions<JwtBearerOptions>(scheme)
-            .Configure<IOptionsMonitor<AuthOptions>>((bearer, settings) =>
+            .Configure<IOptionsFactory<AuthOptions>>((bearer, settings) =>
             {
+                var current = settings.Create(optionsName);
+
                 bearer.SaveToken = true;
-                bearer.RequireHttpsMetadata = settings.Get(optionsName).RequireHttpsMetadata;
-                bearer.IncludeErrorDetails = settings.Get(optionsName).IncludeErrorDetails;
-                bearer.TokenValidationParameters = ValidationRules.Following(settings, optionsName);
+                bearer.RequireHttpsMetadata = current.RequireHttpsMetadata;
+                bearer.IncludeErrorDetails = current.IncludeErrorDetails;
+                bearer.TokenValidationParameters = ValidationRules.Of(current);
             });
 
         if (configure is not null)
