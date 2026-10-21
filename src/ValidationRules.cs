@@ -58,39 +58,9 @@ internal static class ValidationRules
     public static TokenValidationParameters Following(IOptionsMonitor<AuthOptions> settings, string optionsName)
     {
         var rules = Of(settings.Get(optionsName));
-        var keys = new SigningKeys();
+        var keys = new OfSecret<SecurityKey[]>(secret => [Key(secret)]);
         rules.IssuerSigningKeyResolver = (_, _, _, _) => keys.For(settings.Get(optionsName).SecretKey);
 
         return rules;
-    }
-
-    /// <summary>
-    /// The signing key of the secret last seen, made again only when the secret changes.
-    /// </summary>
-    /// <remarks>
-    /// The secret and its key are swapped together as one immutable pair, so a token judged
-    /// while the secret rotates sees either the old pair or the new one, never a key of the
-    /// other secret.
-    /// </remarks>
-    private sealed class SigningKeys
-    {
-        private Issued? _issued;
-
-        public SecurityKey[] For(string secret)
-        {
-            var issued = Volatile.Read(ref _issued);
-
-            if (issued is not null && string.Equals(issued.Secret, secret, StringComparison.Ordinal))
-            {
-                return issued.Keys;
-            }
-
-            var fresh = new Issued(secret, [Key(secret)]);
-            Volatile.Write(ref _issued, fresh);
-
-            return fresh.Keys;
-        }
-
-        private sealed record Issued(string Secret, SecurityKey[] Keys);
     }
 }

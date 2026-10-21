@@ -36,7 +36,12 @@ public static class ServiceCollectionExtensions
             ArgumentException.ThrowIfNullOrWhiteSpace(sectionName);
 
             return services.AddIssuer(
-                configuration, null, JwtBearerDefaults.AuthenticationScheme, sectionName, configure, true);
+                configuration,
+                serviceKey: null,
+                scheme: JwtBearerDefaults.AuthenticationScheme,
+                sectionName,
+                configure,
+                isDefaultScheme: true);
         }
 
         /// <summary>
@@ -62,7 +67,12 @@ public static class ServiceCollectionExtensions
             ArgumentException.ThrowIfNullOrWhiteSpace(serviceKey);
 
             return services.AddIssuer(
-                configuration, serviceKey, serviceKey, sectionName ?? serviceKey, configure, false);
+                configuration,
+                serviceKey,
+                scheme: serviceKey,
+                sectionName ?? serviceKey,
+                configure,
+                isDefaultScheme: false);
         }
 
         /// <summary>
@@ -71,12 +81,14 @@ public static class ServiceCollectionExtensions
         /// <remarks>
         /// For an application that mints tokens and never validates a request. The settings still
         /// have to reach <see cref="AuthOptions"/> somehow, which here means the caller configures
-        /// them in code.
+        /// them in code; they are judged when the host starts all the same, so a secret never set
+        /// is named at startup rather than thrown from inside the first token.
         /// </remarks>
         public IServiceCollection AddTokenProvider()
         {
             ArgumentNullException.ThrowIfNull(services);
 
+            services.AddJudgement(Options.DefaultName, null);
             services.AddBearerRules(Options.DefaultName, JwtBearerDefaults.AuthenticationScheme, null);
 
             return services.AddProvider(null, Options.DefaultName, JwtBearerDefaults.AuthenticationScheme);
@@ -107,10 +119,21 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddAuthSettings(
         this IServiceCollection services, IConfiguration configuration, string optionsName, string sectionName)
     {
-        services.AddOptions<AuthOptions>(optionsName)
-            .Bind(configuration.GetSection(sectionName))
-            .ValidateOnStart();
+        services.AddOptions<AuthOptions>(optionsName).Bind(configuration.GetSection(sectionName));
 
+        return services.AddJudgement(optionsName, sectionName);
+    }
+
+    private static IServiceCollection AddJudgement(
+        this IServiceCollection services, string optionsName, string? sectionName)
+    {
+        var isJudged = services.Any(descriptor =>
+            descriptor.ImplementationInstance is AuthOptionsValidator judge && judge.OptionsName == optionsName);
+
+        if (isJudged && sectionName is null)
+            return services;
+
+        services.AddOptions<AuthOptions>(optionsName).ValidateOnStart();
         services.AddSingleton<IValidateOptions<AuthOptions>>(new AuthOptionsValidator(optionsName, sectionName));
 
         return services;

@@ -84,7 +84,7 @@ Mints and judges tokens according to one named `AuthOptions`.
 | `TokenProvider(string scheme, string optionsName, IOptionsMonitor<AuthOptions> settings, IOptionsMonitor<JwtBearerOptions> bearer, TimeProvider time, TokenMetrics metrics, ILogger<TokenProvider>? logger = null)` | Reads one named configuration and follows it as it changes. |
 | `string Create(IEnumerable<Claim>? claims = null)` | Mints a signed token carrying the given claims. |
 | `string Refresh(int size = 32)` | Mints a refresh token of `size` random bytes. |
-| `void Dispose()` | Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources. |
+| `void Dispose()` | Nothing to release: the signing credentials follow the secret by comparison, not by subscription. |
 
 ### enum TokenRefusal
 
@@ -107,9 +107,9 @@ The verdict on a token, carrying why it was refused.
 
 | Member | Summary |
 | --- | --- |
-| `TokenRefusal Refusal { get; init; }` |  |
+| `TokenRefusal Refusal { get; init; }` | Why the token was refused, or `None`. |
 | `TokenValidation Refused(TokenRefusal refusal, string fault)` | The verdict of a token that was refused, and why. |
 | `TokenValidation Valid { get; }` | The verdict of a token that passed every check. |
 | `TokenValidation(TokenRefusal Refusal, string? Fault)` | The verdict on a token, carrying why it was refused. |
 | `bool IsValid { get; }` | Whether the token passed every check. |
-| `string? Fault { get; init; }` |  |
+| `string? Fault { get; init; }` | The library's own account of the refusal; null for a token that passed. |

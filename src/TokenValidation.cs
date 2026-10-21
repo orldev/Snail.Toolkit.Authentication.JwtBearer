@@ -8,6 +8,8 @@ namespace Snail.Toolkit.Authentication.JwtBearer;
 /// but never that the token had merely expired — the one thing a client can act on. Validity is
 /// derived from the refusal rather than stored beside it, so the two cannot disagree.
 /// </remarks>
+/// <param name="Refusal">Why the token was refused, or <see cref="TokenRefusal.None"/>.</param>
+/// <param name="Fault">The library's own account of the refusal; null for a token that passed.</param>
 public sealed record TokenValidation(TokenRefusal Refusal, string? Fault)
 {
     /// <summary>

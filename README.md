@@ -62,6 +62,10 @@ app.UseAuthorization();   // Required for [Authorize] attributes
 
 Every check defaults to **on**. Turning one off is an explicit decision, written in configuration.
 
+Only `SecretKey` follows a reload of the configuration. The issuer, the audience, the flags and the
+skew are read once, when the scheme's options are built, and a token is always minted for those same
+rules; changing them takes a restart.
+
 The section name is a parameter, so the settings can live wherever the application keeps them:
 
 ```csharp

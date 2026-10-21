@@ -12,10 +12,11 @@ namespace Snail.Toolkit.Authentication.JwtBearer;
 /// </summary>
 /// <remarks>
 /// Judging goes by the rules of its own bearer scheme rather than by a second set built here, so
-/// whatever a caller changed on the scheme's options holds for a token checked by hand as well.
-/// The signing credentials are built once and rebuilt when the settings change: they used to be
-/// allocated on every call, and the secret was captured in the constructor of a singleton, so a
-/// rotated key only took effect after a restart.
+/// whatever a caller changed on the scheme's options holds for a token checked by hand as well. Minting
+/// takes the issuer and audience from those same rules, so a token is always made for the validator that
+/// will judge it: the settings used to be read live for minting and once for judging, and a renamed issuer
+/// made the process refuse every token it minted. Only the secret follows the configuration, on both sides,
+/// by the same rule — the signing credentials are made again when it changes and kept while it does not.
 /// </remarks>
 public sealed partial class TokenProvider : ITokenProvider, IDisposable
 {
@@ -48,9 +49,7 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
     private readonly TimeProvider _time;
     private readonly TokenMetrics _metrics;
     private readonly ILogger<TokenProvider>? _logger;
-    private readonly IDisposable? _subscription;
-
-    private SigningCredentials _credentials;
+    private readonly OfSecret<SigningCredentials> _credentials = new(CredentialsOf);
 
     /// <summary>
     /// Reads one named configuration and follows it as it changes.
@@ -83,45 +82,35 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
         _time = time;
         _metrics = metrics;
         _logger = logger;
-        _credentials = CredentialsOf(settings.Get(optionsName));
-
-        _subscription = settings.OnChange(Apply);
     }
 
     /// <inheritdoc />
     public string Create(IEnumerable<Claim>? claims = null)
     {
         var settings = _settings.Get(_optionsName);
+        var rules = _bearer.Get(_scheme).TokenValidationParameters;
         var issuedAt = _time.GetUtcNow().UtcDateTime;
-        var expires = issuedAt.AddMinutes(settings.TokenLifetime);
         var subject = claims is null ? null : Lend(claims);
 
-        var descriptor = _spare ?? new SecurityTokenDescriptor();
-        _spare = null;
-        descriptor.Issuer = settings.Issuer;
-        descriptor.Audience = settings.Audience;
+        var descriptor = Spare();
+        descriptor.Issuer = rules.ValidIssuer ?? settings.Issuer;
+        descriptor.Audience = rules.ValidAudience ?? settings.Audience;
         descriptor.IssuedAt = issuedAt;
         descriptor.NotBefore = issuedAt;
-        descriptor.Expires = expires;
+        descriptor.Expires = issuedAt.AddMinutes(settings.TokenLifetime);
         descriptor.Subject = subject;
-        descriptor.SigningCredentials = _credentials;
-
-        _metrics.Issued(_scheme);
+        descriptor.SigningCredentials = _credentials.For(settings.SecretKey);
 
         try
         {
-            return Handler.CreateToken(descriptor);
+            var token = Handler.CreateToken(descriptor);
+            _metrics.Issued(_scheme);
+
+            return token;
         }
         finally
         {
-            descriptor.Subject = null;
-            _spare = descriptor;
-
-            if (subject is not null)
-            {
-                subject.Release();
-                _lent = subject;
-            }
+            Return(descriptor, subject);
         }
     }
 
@@ -150,11 +139,39 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
             refusal, verdict.Exception?.Message ?? "The token did not pass validation.");
     }
 
-    /// <inheritdoc />
-    public void Dispose() => _subscription?.Dispose();
+    /// <summary>
+    /// Nothing to release: the signing credentials follow the secret by comparison, not by subscription.
+    /// </summary>
+    /// <remarks>
+    /// Kept because it shipped. It used to end the subscription to the settings through which a rotated secret
+    /// reached the credentials.
+    /// </remarks>
+    public void Dispose()
+    {
+    }
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "A token of scheme {Scheme} was refused: {Refusal}.")]
     private static partial void Refused(ILogger logger, string scheme, TokenRefusal refusal);
+
+    private static SecurityTokenDescriptor Spare()
+    {
+        var descriptor = _spare ?? new SecurityTokenDescriptor();
+        _spare = null;
+
+        return descriptor;
+    }
+
+    private static void Return(SecurityTokenDescriptor descriptor, LentClaims? subject)
+    {
+        descriptor.Subject = null;
+        _spare = descriptor;
+
+        if (subject is null)
+            return;
+
+        subject.Release();
+        _lent = subject;
+    }
 
     private static LentClaims Lend(IEnumerable<Claim> claims)
     {
@@ -176,12 +193,6 @@ public sealed partial class TokenProvider : ITokenProvider, IDisposable
         _ => TokenRefusal.Other
     };
 
-    private void Apply(AuthOptions current, string? name)
-    {
-        if (string.Equals(name ?? Options.DefaultName, _optionsName, StringComparison.Ordinal))
-            _credentials = CredentialsOf(current);
-    }
-
-    private static SigningCredentials CredentialsOf(AuthOptions settings) =>
-        new(ValidationRules.Key(settings.SecretKey), SecurityAlgorithms.HmacSha512);
+    private static SigningCredentials CredentialsOf(string secret) =>
+        new(ValidationRules.Key(secret), SecurityAlgorithms.HmacSha512);
 }
