@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Snail.Toolkit.Authentication.JwtBearer.Tests;
 
+[Collection(GlobalCryptoCollection.Name)]
 public class TokenProviderTests
 {
     [Fact]

@@ -14,6 +14,7 @@ namespace Snail.Toolkit.Authentication.JwtBearer.Tests.Chaos;
 /// The provider on the paths the happy tests never walk: settings that were never bound, values at the edge of
 /// their type, a mint that fails halfway, a cancelled caller, a token the size of a file.
 /// </summary>
+[Collection(GlobalCryptoCollection.Name)]
 public class ProviderChaosTests
 {
     /// <summary>
@@ -119,11 +120,16 @@ public class ProviderChaosTests
     /// Pins: a token of one megabyte is refused as malformed by the size limit before anything is parsed, and in
     /// well under a request's budget.
     /// </summary>
+    /// <remarks>
+    /// A short malformed token goes first, so the limit measures the refusal and not the first compilation of the
+    /// validation path: cold, under a parallel suite on a loaded machine, the first call took 303 ms.
+    /// </remarks>
     [Fact]
     public async Task ValidateAsync_OneMegabyteToken_IsMalformedQuickly()
     {
         var tokens = Provider();
         var huge = new string('a', 1_048_576);
+        await tokens.ValidateAsync("warm-up");
         var watch = Stopwatch.StartNew();
 
         var verdict = await tokens.ValidateAsync(huge);
